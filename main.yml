@@ -1,6 +1,7 @@
 ---
 - name: Configure Internet Pi.
-  hosts: internet_pi
+  # hosts: internet_pi
+  hosts: "*"
   become: true
 
   pre_tasks:
@@ -34,6 +35,10 @@
     - name: Set up Internet Monitoring.
       ansible.builtin.import_tasks: tasks/internet-monitoring.yml
       when: monitoring_enable
+
+    - name: Build Pi-Hole Unbound OCI Image.
+      ansible.builtin.import_tasks: tasks/pihole-unbound-oci.yml
+      when: oci_enable
 
     - name: Set up Pi Hole.
       ansible.builtin.import_tasks: tasks/pi-hole.yml

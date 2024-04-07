@@ -1,3 +1,5 @@
-inventory.ini
-config.yml
+# inventory.ini
+# config.yml
 .DS_Store
+id_rsa_ansible
+id_rsa_ansible.pub

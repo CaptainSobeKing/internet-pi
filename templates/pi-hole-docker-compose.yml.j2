@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 ---
-version: "3.5"
+# version: "3.6"
 
 {% if domain_name_enable and domain_name and domain_pihole %}
 {# Make sure pihole and nginx-proxy are in the same network #}
@@ -13,7 +13,8 @@ networks:
 services:
   pihole:
     container_name: pihole
-    image: pihole/pihole:latest
+    # image: pihole/pihole:latest
+    image: localhost:5000/pihole-unbound:latest
     restart: unless-stopped
     hostname: '{{ pihole_hostname }}'
     ports:
@@ -30,6 +31,11 @@ services:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
       ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
+      WEBTHEME: default-dark
+      REV_SERVER: false
+      PIHOLE_DNS_: 127.0.0.1#5335
+      DNSSEC: "true"
+      DNSMASQ_LISTENING: single
 {% if domain_name_enable and domain_name and domain_pihole %}
       VIRTUAL_HOST: {{ domain_pihole }}.{{ domain_name }}
       VIRTUAL_PORT: 80

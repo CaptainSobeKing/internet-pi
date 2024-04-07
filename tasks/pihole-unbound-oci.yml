@@ -1,0 +1,74 @@
+---
+# - name: Build and push Docker image to AWS ECR
+#   hosts: localhost
+#   tasks:
+
+    - name: Ensure pi-hole directory exist.
+      ansible.builtin.file:
+        path: "{{ config_dir }}/pihole-unbound"
+        state: directory
+      become: false
+
+    - name: Copy build files into place.
+      # ansible.builtin.template:
+      ansible.builtin.copy:
+        src: one-container/pihole-unbound/{{ item.src }}
+        dest: "{{ config_dir }}/pihole-unbound/{{ item.dest }}"
+        mode: 0644
+      loop:
+        - src: Dockerfile
+          dest: Dockerfile
+        - src:  99-edns.conf
+          dest: 99-edns.conf
+        - src:  VERSION
+          dest: VERSION
+        - src: build_and_push.sh
+          dest: build_and_push.sh
+        - src: lighttpd-external.conf
+          dest: lighttpd-external.conf
+        - src: unbound-pihole.conf
+          dest: unbound-pihole.conf
+        - src: unbound-run
+          dest: unbound-run
+      become: false
+
+    - name: Build Docker image
+      become: true
+      become_user: captainsobe
+      community.docker.docker_image:
+        build:
+          path: "{{ config_dir }}/pihole-unbound"
+        name: "{{ pihole_image }}"
+        tag: latest
+        push: false
+        source: build
+
+    # - set_fact:
+    #     ecr_registry_url: "{{ aws_info.account }}.dkr.ecr.eu-west-1.amazonaws.com"
+
+    # - name: Get ECR token
+    #   shell: "aws ecr get-login-password --region us-east-1"
+    #   register: ecr_token
+
+    # - name: Log into ECR registry
+    #   docker_login:
+    #     registry_url: "{{ ecr_registry_url }}"
+    #     debug: yes
+    #     username: "AWS"
+    #     password: "{{ ecr_token.stdout }}"
+    #     reauthorize: yes
+
+    # - name: Ensure ECR repository exists.
+    #   community.aws.ecs_ecr:
+    #     name: "{{ pihole_image }}"
+    #     region: "{{ ecr_region }}"
+    #     registry_id: "{{ ecr_account_id }}"
+    #     state: present
+
+    # - name: Push Docker image to ECR
+    #   community.docker.docker_image:
+    #     name: pihole-unbound:latest
+    #     repository: "{{ ecr_registry_url }}/{{ pihole_image }}:latest"
+    #     push: true
+    #     source: local
+...
