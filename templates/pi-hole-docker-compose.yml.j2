@@ -1,11 +1,12 @@
 # {{ ansible_managed }}
 ---
-# version: "3.6"
+# version: "3.5"
 
 {% if domain_name_enable and domain_name and domain_pihole %}
 {# Make sure pihole and nginx-proxy are in the same network #}
 networks:
   front-tier:
+    external: true
     name: internet-monitoring-front-tier
 {% endif %}
 
@@ -13,13 +14,12 @@ networks:
 services:
   pihole:
     container_name: pihole
-    # image: pihole/pihole:latest
-    image: localhost:5000/pihole-unbound:latest
+    image: pihole-ubound:latest
     restart: unless-stopped
     hostname: '{{ pihole_hostname }}'
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
+      - "5353:53/tcp"
+      - "5353:53/udp"
       - "67:67/udp"
 {% if domain_name_enable and domain_name and domain_pihole %}
       - "38080:80/tcp"
@@ -30,16 +30,16 @@ services:
     environment:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
-      ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
-      WEBTHEME: default-dark
-      REV_SERVER: false
-      PIHOLE_DNS_: 127.0.0.1#5335
-      DNSSEC: "true"
-      DNSMASQ_LISTENING: single
+      # ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
 {% if domain_name_enable and domain_name and domain_pihole %}
       VIRTUAL_HOST: {{ domain_pihole }}.{{ domain_name }}
       VIRTUAL_PORT: 80
       PROXY_LOCATION: {{ domain_pihole }}
+      FTLCONF_LOCAL_IPV4: '{{ ansible_facts['default_ipv4']['address'] }}'
+      WEBTHEME: 'default-dark'
+      PIHOLE_DNS_: 127.0.0.1#5335
+      DNSSEC: "true"
+      DNSMASQ_LISTENING: single
     networks:
       - front-tier
 {% endif %}
@@ -80,3 +80,4 @@ services:
       PIHOLE_PASSWORD: '{{ pihole_password }}'
       INTERVAL: '30s'
       PORT: 9617
+...

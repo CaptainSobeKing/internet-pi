@@ -1,4 +1,4 @@
-version: '3.0'
+# version: '3.0'
 
 volumes:
   etc_pihole-unbound:
@@ -7,28 +7,31 @@ volumes:
 services:
   pihole:
     container_name: pihole
-    image: cbcrowe/pihole-unbound:latest
-    hostname: ${HOSTNAME}
-    domainname: ${DOMAIN_NAME}
+    image: pihole-ubound:latest
+    hostname: '{{ pihole_hostname }}'
+    domainname: '{{ domain_name }}'
     ports:
       - 443:443/tcp
       - 53:53/tcp
       - 53:53/udp
-      - ${PIHOLE_WEBPORT:-80}:80/tcp #Allows use of different port to access pihole web interface when other docker containers use port 80
-      # - 5335:5335/tcp # Uncomment to enable unbound access on local server
+      - 8080:8080/tcp #Allows use of different port to access pihole web interface when other docker containers use port 80
+      - 5335:5335/tcp # Uncomment to enable unbound access on local server
       # - 22/tcp # Uncomment to enable SSH
     environment:
-      - FTLCONF_LOCAL_IPV4=${FTLCONF_LOCAL_IPV4}
-      - TZ=${TZ:-UTC}
-      - WEBPASSWORD=${WEBPASSWORD}
-      - WEBTHEME=${WEBTHEME:-default-light}
-      - REV_SERVER=${REV_SERVER:-false}
-      - REV_SERVER_TARGET=${REV_SERVER_TARGET}
-      - REV_SERVER_DOMAIN=${REV_SERVER_DOMAIN}
-      - REV_SERVER_CIDR=${REV_SERVER_CIDR}
+      - FTLCONF_LOCAL_IPV4='{{ ansible_facts['default_ipv4']['address'] }}'
+      - TZ='{{ pihole_timezone }}'
+      - WEBPASSWORD='{{ pihole_password }}'
+      - WEBTHEME='default-dark'
+      # - REV_SERVER=${REV_SERVER:-false}
+      # - REV_SERVER_TARGET=${REV_SERVER_TARGET}
+      # - REV_SERVER_DOMAIN=${REV_SERVER_DOMAIN}
+      # - REV_SERVER_CIDR=${REV_SERVER_CIDR}
       - PIHOLE_DNS_=127.0.0.1#5335
       - DNSSEC="true"
       - DNSMASQ_LISTENING=single
+      - VIRTUAL_HOST={{ domain_pihole }}.{{ domain_name }}
+      - VIRTUAL_PORT=80
+      - PROXY_LOCATION={{ domain_pihole }}
     volumes:
       - etc_pihole-unbound:/etc/pihole:rw
       - etc_pihole_dnsmasq-unbound:/etc/dnsmasq.d:rw
